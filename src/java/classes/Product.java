@@ -1,17 +1,21 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
+ * To change this license header, choose License HeaderesultSet in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 package classes;
 
-import database.Connection;
-import static database.Connection.connect;
-import database.connectionection;
+import database.DatabaseConnection;
+import static database.DatabaseConnection.connect;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,12 +36,12 @@ public class Product extends HttpServlet {
      *
      * @param request servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws ServletException if a servlet-specific error occuresultSet
+     * @throws IOException if an I/O error occuresultSet
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
+        response.setContentType("text/html;charesultSetet=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO printer your page here. You may use following sample code. */
             out.println("<!DOCTYPE html>");
@@ -58,8 +62,8 @@ public class Product extends HttpServlet {
      *
      * @param request servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws ServletException if a servlet-specific error occuresultSet
+     * @throws IOException if an I/O error occuresultSet
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -78,11 +82,11 @@ public class Product extends HttpServlet {
             
             if (!request.getParameterNames().hasMoreElements())
             {
-                printer.println(resultMethod(query));
+                printer.println(getResult(query));
             } 
             else {
-                int id = Integer.parseInt(request.getParameter("ProductID"));
-                printer.println(resultMethod("SELECT * FROM products WHERE Product_id= ?", String.valueOf(id)));
+                int id = Integer.paresultSeteInt(request.getParameter("ProductID"));
+                printer.println(getResult("SELECT * FROM products WHERE Product_id= ?", String.valueOf(id)));
             }
 
         } catch (IOException ex) {
@@ -96,8 +100,8 @@ public class Product extends HttpServlet {
      *
      * @param request servlet request
      * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
+     * @throws ServletException if a servlet-specific error occuresultSet
+     * @throws IOException if an I/O error occuresultSet
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -126,8 +130,7 @@ public class Product extends HttpServlet {
             }
             else 
             {
-                //set status to internal srerver error..
-                response.setStatus(500);
+                
                 printer.println("No match data found for this input");
             }
 
@@ -138,16 +141,35 @@ public class Product extends HttpServlet {
     }
 
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
     
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Set<String> keySet = request.getParameterMap().keySet();
+        try (PrintWriter printer = response.getWriter()) {
+            Connection connection = connect();
+            if (keySet.contains("productId")) {
+                
+                PreparedStatement pStatement;
+                String query=""
+                        + "delete FROM products WHERE Product_id=" + request.getParameter("productId");
+                pStatement = connection.prepareStatement(query);
+               
+                try {
+                    pStatement.executeUpdate();
+                } catch (SQLException ex) {
+                    System.out.println("SQL Exception " + ex.getMessage());
+                    
+                   
+                }
+            } else {
+                printer.println("No dta found");
+                
+            }
+        }
+        catch (SQLException ex) {
+            System.err.println("SQL Exception Error: " + ex.getMessage());
+        } 
+    }
     
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) {
@@ -182,81 +204,45 @@ public class Product extends HttpServlet {
         }
     }
 
-    
-    @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Set<String> keySet = request.getParameterMap().keySet();
-        try (PrintWriter printer = response.getWriter()) {
-            Connection connection = connect();
-            if (keySet.contains("productId")) {
-                
-                PreparedStatement pStatement;
-                String query="DELETE FROM `product` WHERE `ProductID`=" + request.getParameter("ProductID");
-                pStatement = connection.prepareStatement(query);
-                try {
-                    pStatement.executeUpdate();
-                } catch (SQLException ex) {
-                    System.err.println("SQL Exception " + ex.getMessage());
-                    
-                   
-                }
-            } else {
-                out.println("Error: Not enough data in table to delete");
-                
-            }
-        } catch (SQLException ex) {
-            System.err.println("SQL Exception Error: " + ex.getMessage());
-        } catch (SQLException ex) {
-            Logger.getLogger(Product.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
-    /**
-     * resultMethod accepts two arguments It executes the Query get ProductID,
-     * name, description, quantity
-     *
-     * @param query
-     * @param params
-     * @throws SQLException
-     * @return
-     */
-    private String resultMethod(String query, String... params) {
+    private String getResult(String query, String... params) {
+       
         StringBuilder sb = new StringBuilder();
-        String jsonString = "";
-        try (Connection connection = Credentials.getConnection()) {
+        String strJSON = "";
+        
+        try (Connection connection = DatabaseConnection.connect()) {
+            
+            
             PreparedStatement pStatement = connection.prepareStatement(query);
-            for (int i = 1; i <= params.length; i++) {
+            
+            for (int i = 1; i <= params.length; i++) 
+            {
                 pStatement.setString(i, params[i - 1]);
             }
-            ResultSet rs = pStatement.executeQuery();
-            List l1 = new LinkedList();
-            while (rs.next()) {
-                //Refernce Example 5-2 - Combination of JSON primitives, Map and List
-                //https://code.google.com/p/json-simple/wiki/EncodingExamples
+            
+            ResultSet resultSet = pStatement.executeQuery();
+            
+            
+            
+            List list1 = new LinkedList();
+            
+            while (resultSet.next()) {
+                
+                
+                
                 Map m1 = new LinkedHashMap();
-                m1.put("ProductID", rs.getInt("ProductID"));
-                m1.put("name", rs.getString("name"));
-                m1.put("description", rs.getString("description"));
-                m1.put("quantity", rs.getInt("quantity"));
-                l1.add(m1);
+                m1.put("ProductID", resultSet.getInt("ProductID"));
+                m1.put("name", resultSet.getString("name"));
+                m1.put("description", resultSet.getString("description"));
+                m1.put("quantity", resultSet.getInt("quantity"));
+                list1.add(m1);
 
             }
 
-            jsonString = JSONValue.toJSONString(l1);
+            strJSON = JSONValue.toJSONString(list1);
         } catch (SQLException ex) {
             System.err.println("SQL Exception Error: " + ex.getMessage());
         }
-        return jsonString.replace("},", "},\n");
+        return strJSON.replace("},", "},\n");
     }
 
     /**
@@ -269,7 +255,7 @@ public class Product extends HttpServlet {
      */
     private int doUpdate(String query, String... params) {
         int numChanges = 0;
-        try (Connection connection = Credentials.getConnection()) {
+        try (DatabaseConnection connection = Credentials.getConnection()) {
             PreparedStatement pStatement = connection.prepareStatement(query);
             for (int i = 1; i <= params.length; i++) {
                 pStatement.setString(i, params[i - 1]);
@@ -284,4 +270,4 @@ public class Product extends HttpServlet {
 }
 
 
-}
+
