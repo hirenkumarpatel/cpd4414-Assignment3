@@ -13,7 +13,7 @@ import java.sql.SQLException;
  *
  * @author Hiren Patel
  */
-public class connection {
+public class DatabaseConnection {
     
     public static Connection connect() throws SQLException {
         Connection connection = null;
@@ -23,7 +23,7 @@ public class connection {
             String jdbc = "jdbc:mysql://localhost/java2_c0651609";
             String user = "root";
             String password = "";
-            connection = DriverManager.getConnection(jdbc, user, password);
+            connection = (Connection) (DatabaseConnection) DriverManager.getConnection(jdbc, user, password);
             String query = "SELECT * FROM products";
 
         } catch (ClassNotFoundException ex ) {
