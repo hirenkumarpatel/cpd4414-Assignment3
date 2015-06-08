@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,6 +32,7 @@ import org.json.simple.JSONValue;
  *
  * @author Hiren Patel
  */
+@WebServlet ("/Product")
 public class Product extends HttpServlet {
 
     /**
