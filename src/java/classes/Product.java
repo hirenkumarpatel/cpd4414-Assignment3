@@ -5,9 +5,16 @@
  */
 package classes;
 
+import database.Connection;
+import static database.Connection.connect;
+import database.connectionection;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -146,43 +153,51 @@ public class Product extends HttpServlet {
     protected void doPut(HttpServletRequest request, HttpServletResponse response) {
 
         Set<String> keySet = request.getParameterMap().keySet();
-        try (PrintWriter out = response.getWriter()) {
-            if (keySet.contains("ProductID") && keySet.contains("name") && keySet.contains("description") && keySet.contains("quantity")) {
-                String ProductID = request.getParameter("ProductID");
-                String name = request.getParameter("name");
-                String description = request.getParameter("description");
-                String quantity = request.getParameter("quantity");
-                doUpdate("update product set ProductID = ?, name = ?, description = ?, quantity = ? where ProductID = ?", ProductID, name, description, quantity, ProductID);
+        
+        
+        try (PrintWriter printer = response.getWriter())
+        {
+            if (keySet.contains("ProductId") && keySet.contains("productName") && keySet.contains("productDescription") && keySet.contains("productQuantity")) {
+                
+                String ProductId = request.getParameter("ProductId");
+                String productName = request.getParameter("productName");
+                String productDescription = request.getParameter("productDescription");
+                String productQuantity = request.getParameter("productQuantity");
+                
+                
+                doUpdate("update products"
+                        + " set Product_id = ?,"
+                        + " product_name = ?, "
+                        + "product_description = ?, "
+                        + "product_quantity = ? "
+                        + "where Product_id = ?", ProductId, productName, productDescription, productQuantity, ProductId);
             } else {
-                out.println("Error: Not data found for this input. Please use a URL of the form /products?id=xx&name=XXX&description=XXX&quantity=xx");
+                printer.println("No matching data found..");
             }
         } catch (IOException ex) {
+            System.out.println("IO exception" + ex.getMessage());
+            //setting status to internal server error
             response.setStatus(500);
-            System.out.println("Error in writing output: " + ex.getMessage());
+            
         }
     }
 
-    /**
-     * doDelete Method took two Arguments and This method Will delete Entries
-     * from product Table This will also catch SQLException and Display an error
-     * message
-     *
-     * @param request
-     * @param response
-     * @throws IOException
-     */
+    
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Set<String> keySet = request.getParameterMap().keySet();
-        try (PrintWriter out = response.getWriter()) {
-            Connection conn = getConnection();
-            if (keySet.contains("ProductID")) {
-                PreparedStatement pstmt = conn.prepareStatement("DELETE FROM `product` WHERE `ProductID`=" + request.getParameter("ProductID"));
+        try (PrintWriter printer = response.getWriter()) {
+            Connection connection = connect();
+            if (keySet.contains("productId")) {
+                
+                PreparedStatement pStatement;
+                String query="DELETE FROM `product` WHERE `ProductID`=" + request.getParameter("ProductID");
+                pStatement = connection.prepareStatement(query);
                 try {
-                    pstmt.executeUpdate();
+                    pStatement.executeUpdate();
                 } catch (SQLException ex) {
-                    System.err.println("SQL Exception Error in Update prepared Statement: " + ex.getMessage());
-                    out.println("Error in deleting entry.");
+                    System.err.println("SQL Exception " + ex.getMessage());
+                    
                    
                 }
             } else {
@@ -191,6 +206,8 @@ public class Product extends HttpServlet {
             }
         } catch (SQLException ex) {
             System.err.println("SQL Exception Error: " + ex.getMessage());
+        } catch (SQLException ex) {
+            Logger.getLogger(Product.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -216,12 +233,12 @@ public class Product extends HttpServlet {
     private String resultMethod(String query, String... params) {
         StringBuilder sb = new StringBuilder();
         String jsonString = "";
-        try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
+        try (Connection connection = Credentials.getConnection()) {
+            PreparedStatement pStatement = connection.prepareStatement(query);
             for (int i = 1; i <= params.length; i++) {
-                pstmt.setString(i, params[i - 1]);
+                pStatement.setString(i, params[i - 1]);
             }
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pStatement.executeQuery();
             List l1 = new LinkedList();
             while (rs.next()) {
                 //Refernce Example 5-2 - Combination of JSON primitives, Map and List
@@ -252,12 +269,12 @@ public class Product extends HttpServlet {
      */
     private int doUpdate(String query, String... params) {
         int numChanges = 0;
-        try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
+        try (Connection connection = Credentials.getConnection()) {
+            PreparedStatement pStatement = connection.prepareStatement(query);
             for (int i = 1; i <= params.length; i++) {
-                pstmt.setString(i, params[i - 1]);
+                pStatement.setString(i, params[i - 1]);
             }
-            numChanges = pstmt.executeUpdate();
+            numChanges = pStatement.executeUpdate();
         } catch (SQLException ex) {
             System.err.println("SQL EXception in doUpdate Method" + ex.getMessage());
         }
