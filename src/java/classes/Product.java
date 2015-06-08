@@ -14,8 +14,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +25,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.json.simple.JSONValue;
 
 /**
  *
@@ -85,7 +88,7 @@ public class Product extends HttpServlet {
                 printer.println(getResult(query));
             } 
             else {
-                int id = Integer.paresultSeteInt(request.getParameter("ProductID"));
+                int id = Integer.parseInt(request.getParameter("productId"));
                 printer.println(getResult("SELECT * FROM products WHERE Product_id= ?", String.valueOf(id)));
             }
 
@@ -229,42 +232,46 @@ public class Product extends HttpServlet {
                 
                 
                 
-                Map m1 = new LinkedHashMap();
-                m1.put("ProductID", resultSet.getInt("ProductID"));
-                m1.put("name", resultSet.getString("name"));
-                m1.put("description", resultSet.getString("description"));
-                m1.put("quantity", resultSet.getInt("quantity"));
-                list1.add(m1);
+                Map map = new LinkedHashMap();
+                
+                
+                map.put("productId", resultSet.getInt("productId"));
+                map.put("productName", resultSet.getString("productName"));
+                map.put("productDescription", resultSet.getString("productDescription"));
+                map.put("productQuantity", resultSet.getInt("productQuantity"));
+                list1.add(map);
 
             }
 
             strJSON = JSONValue.toJSONString(list1);
-        } catch (SQLException ex) {
+        } 
+        catch (SQLException ex)
+        
+        {
             System.err.println("SQL Exception Error: " + ex.getMessage());
         }
+        
         return strJSON.replace("},", "},\n");
     }
 
-    /**
-     * doUpdate Method accepts two arguments Update the entries in the table
-     * 'product'
-     *
-     * @param query
-     * @param params
-     * @return numChanges
-     */
+    
     private int doUpdate(String query, String... params) {
-        int numChanges = 0;
-        try (DatabaseConnection connection = Credentials.getConnection()) {
+        int rowAffected = 0;
+        try (Connection connection = DatabaseConnection.connect())
+        {
             PreparedStatement pStatement = connection.prepareStatement(query);
+           
+            
             for (int i = 1; i <= params.length; i++) {
                 pStatement.setString(i, params[i - 1]);
             }
-            numChanges = pStatement.executeUpdate();
-        } catch (SQLException ex) {
-            System.err.println("SQL EXception in doUpdate Method" + ex.getMessage());
+            rowAffected = pStatement.executeUpdate();
+        } catch (SQLException ex) 
+        
+        {
+            System.err.println("SQL Exception" + ex.getMessage());
         }
-        return numChanges;
+        return rowAffected;
     }
 
 }
