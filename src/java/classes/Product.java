@@ -7,6 +7,7 @@ package classes;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +32,7 @@ public class Product extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
+            /* TODO printer your page here. You may use following sample code. */
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
@@ -57,10 +58,31 @@ public class Product extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // to indicate content type
+        response.setHeader("Content-Type", "text/plain-text");
         
-        
-        processRequest(request, response);
+        try 
+        {
+            //getting response from user
+            PrintWriter printer = response.getWriter();
+            
+            String query = "SELECT * FROM products;";
+            
+            
+            if (!request.getParameterNames().hasMoreElements())
+            {
+                printer.println(resultMethod(query));
+            } 
+            else {
+                int id = Integer.parseInt(request.getParameter("ProductID"));
+                printer.println(resultMethod("SELECT * FROM product WHERE ProductID= ?", String.valueOf(id)));
+            }
+
+        } catch (IOException ex) {
+            System.err.println("Input printer Exception: " + ex.getMessage());
+        }
     }
+
 
     /**
      * Handles the HTTP <code>POST</code> method.
@@ -73,8 +95,32 @@ public class Product extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        
+        
+        Set<String> keyValues = request.getParameterMap().keySet();
+
+        try 
+        {
+            PrintWriter printer = response.getWriter();
+            if (keyValues.contains("ProductID") && keyValues.contains("name") && keyValues.contains("description")
+                    && keyValues.contains("quantity")) {
+                String ProductID = request.getParameter("ProductID");
+                String name = request.getParameter("name");
+                String description = request.getParameter("description");
+                String quantity = request.getParameter("quantity");
+                doUpdate("INSERT INTO product (ProductID,name,description,quantity) VALUES (?, ?, ?, ?)", ProductID, name, description, quantity);
+
+            } else {
+                response.setStatus(500);
+                printer.println("Error: Not data found for this input. Please use a URL of the form /servlet?name=XYZ&age=XYZ");
+            }
+
+        } catch (IOException ex) {
+            System.err.println("Input Output Issue in doPost Method: " + ex.getMessage());
+        }
+
     }
+
 
     /**
      * Returns a short description of the servlet.
