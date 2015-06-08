@@ -156,7 +156,7 @@ public class Product extends HttpServlet {
                 
                 PreparedStatement pStatement;
                 String query=""
-                        + "delete FROM products WHERE Product_id=" + request.getParameter("productId");
+                        + "delete FROM products where Product_id=" + request.getParameter("productId");
                 pStatement = connection.prepareStatement(query);
                
                 try {
@@ -186,7 +186,7 @@ public class Product extends HttpServlet {
         {
             if (keySet.contains("ProductId") && keySet.contains("productName") && keySet.contains("productDescription") && keySet.contains("productQuantity")) {
                 
-                String ProductId = request.getParameter("ProductId");
+                String productId = request.getParameter("productId");
                 String productName = request.getParameter("productName");
                 String productDescription = request.getParameter("productDescription");
                 String productQuantity = request.getParameter("productQuantity");
@@ -197,15 +197,15 @@ public class Product extends HttpServlet {
                         + " product_name = ?, "
                         + "product_description = ?, "
                         + "product_quantity = ? "
-                        + "where Product_id = ?", ProductId, productName, productDescription, productQuantity, ProductId);
-            } else {
+                        + "where product_id = ?", productId, productName, productDescription, productQuantity, productId);
+            }
+            else {
                 printer.println("No matching data found..");
             }
         } catch (IOException ex) {
             System.out.println("IO exception" + ex.getMessage());
-            //setting status to internal server error
-            response.setStatus(500);
             
+           
         }
     }
 
@@ -250,7 +250,7 @@ public class Product extends HttpServlet {
         catch (SQLException ex)
         
         {
-            System.err.println("SQL Exception Error: " + ex.getMessage());
+            System.out.println("SQL Exception Error: " + ex.getMessage());
         }
         
         return strJSON.replace("},", "},\n");
